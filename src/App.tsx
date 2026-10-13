@@ -39,6 +39,8 @@ export default function App() {
 
   // Trip details
   const [tripMode, setTripMode] = useState<'route' | 'direct'>('route');
+  const [fromAddress, setFromAddress] = useState<string>('');
+  const [toAddress, setToAddress] = useState<string>('');
   const [distanceKm, setDistanceKm] = useState<number>(120);
   const [isRoundTrip, setIsRoundTrip] = useState<boolean>(false);
   const [consumptionL100, setConsumptionL100] = useState<number>(6.5);
@@ -143,6 +145,10 @@ export default function App() {
               lang={lang}
               tripMode={tripMode}
               onTripModeChange={setTripMode}
+              fromAddress={fromAddress}
+              onFromAddressChange={setFromAddress}
+              toAddress={toAddress}
+              onToAddressChange={setToAddress}
               distanceKm={distanceKm}
               onDistanceKmChange={setDistanceKm}
               isRoundTrip={isRoundTrip}
@@ -196,6 +202,8 @@ export default function App() {
               passengerCount={passengerCount}
               isRoundTrip={isRoundTrip}
               selectedFuelLabel={fuelTypeLabels[selectedFuelType]}
+              fromAddress={fromAddress}
+              toAddress={toAddress}
             />
           </div>
         </div>

@@ -26,6 +26,10 @@ interface TripFormProps {
   lang: Language;
   tripMode: 'route' | 'direct';
   onTripModeChange: (mode: 'route' | 'direct') => void;
+  fromAddress: string;
+  onFromAddressChange: (addr: string) => void;
+  toAddress: string;
+  onToAddressChange: (addr: string) => void;
   distanceKm: number;
   onDistanceKmChange: (distance: number) => void;
   isRoundTrip: boolean;
@@ -40,6 +44,10 @@ export const TripForm: React.FC<TripFormProps> = ({
   lang,
   tripMode,
   onTripModeChange,
+  fromAddress,
+  onFromAddressChange,
+  toAddress,
+  onToAddressChange,
   distanceKm,
   onDistanceKmChange,
   isRoundTrip,
@@ -52,8 +60,6 @@ export const TripForm: React.FC<TripFormProps> = ({
   const t = translations[lang];
 
   // Route state
-  const [fromAddress, setFromAddress] = useState('');
-  const [toAddress, setToAddress] = useState('');
   const [fromSuggestions, setFromSuggestions] = useState<LocationPoint[]>([]);
   const [toSuggestions, setToSuggestions] = useState<LocationPoint[]>([]);
   const [showFromSuggestions, setShowFromSuggestions] = useState(false);
@@ -76,10 +82,10 @@ export const TripForm: React.FC<TripFormProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (fromWrapperRef.current && !fromWrapperRef.current.contains(event.target as Node)) {
-        setShowFromSuggestions(false);
+        setShowFromSuggestions((prev) => (prev ? false : prev));
       }
       if (toWrapperRef.current && !toWrapperRef.current.contains(event.target as Node)) {
-        setShowToSuggestions(false);
+        setShowToSuggestions((prev) => (prev ? false : prev));
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -87,7 +93,7 @@ export const TripForm: React.FC<TripFormProps> = ({
   }, []);
 
   const handleFromInput = (val: string) => {
-    setFromAddress(val);
+    onFromAddressChange(val);
     if (fromDebounceRef.current) clearTimeout(fromDebounceRef.current);
     if (val.trim().length >= 2) {
       setShowFromSuggestions(true);
@@ -110,7 +116,7 @@ export const TripForm: React.FC<TripFormProps> = ({
   };
 
   const handleToInput = (val: string) => {
-    setToAddress(val);
+    onToAddressChange(val);
     if (toDebounceRef.current) clearTimeout(toDebounceRef.current);
     if (val.trim().length >= 2) {
       setShowToSuggestions(true);
@@ -133,9 +139,10 @@ export const TripForm: React.FC<TripFormProps> = ({
   };
 
   const handleSwapAddresses = () => {
-    const temp = fromAddress;
-    setFromAddress(toAddress);
-    setToAddress(temp);
+    const currentFrom = fromAddress;
+    const currentTo = toAddress;
+    onFromAddressChange(currentTo);
+    onToAddressChange(currentFrom);
     setFromSuggestions([]);
     setToSuggestions([]);
   };
@@ -264,7 +271,7 @@ export const TripForm: React.FC<TripFormProps> = ({
                       key={idx}
                       type="button"
                       onClick={() => {
-                        setFromAddress(s.displayName);
+                        onFromAddressChange(s.displayName);
                         setShowFromSuggestions(false);
                       }}
                       className="w-full text-left px-3.5 py-2.5 text-xs text-zinc-200 hover:bg-zinc-800 hover:text-emerald-400 border-b border-zinc-800/60 last:border-0 truncate flex items-center gap-2 transition-colors cursor-pointer"
@@ -332,7 +339,7 @@ export const TripForm: React.FC<TripFormProps> = ({
                       key={idx}
                       type="button"
                       onClick={() => {
-                        setToAddress(s.displayName);
+                        onToAddressChange(s.displayName);
                         setShowToSuggestions(false);
                       }}
                       className="w-full text-left px-3.5 py-2.5 text-xs text-zinc-200 hover:bg-zinc-800 hover:text-emerald-400 border-b border-zinc-800/60 last:border-0 truncate flex items-center gap-2 transition-colors cursor-pointer"

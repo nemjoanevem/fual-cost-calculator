@@ -27,6 +27,8 @@ interface CostSummaryProps {
   passengerCount: number;
   isRoundTrip: boolean;
   selectedFuelLabel: string;
+  fromAddress?: string;
+  toAddress?: string;
 }
 
 export const CostSummary: React.FC<CostSummaryProps> = ({
@@ -41,6 +43,8 @@ export const CostSummary: React.FC<CostSummaryProps> = ({
   passengerCount,
   isRoundTrip,
   selectedFuelLabel,
+  fromAddress,
+  toAddress,
 }) => {
   const t = translations[lang];
   const [copied, setCopied] = useState(false);
@@ -67,9 +71,13 @@ export const CostSummary: React.FC<CostSummaryProps> = ({
   const amortPercent = 100 - fuelPercent;
 
   const handleCopySummary = async () => {
+    const routeText = fromAddress?.trim() && toAddress?.trim()
+      ? `🚩 ${lang === 'hu' ? 'Útvonal' : 'Route'}: ${fromAddress.trim()} ➔ ${toAddress.trim()}\n`
+      : '';
+
     const summaryText = `🚗 ${t.appTitle}
 ----------------------------------
-📍 ${t.distanceLabel}: ${totalDistanceKm} km ${isRoundTrip ? `(${t.roundTrip})` : ''}
+${routeText}📍 ${t.distanceLabel}: ${totalDistanceKm} km ${isRoundTrip ? `(${t.roundTrip})` : ''}
 ⛽ ${t.fuelType}: ${selectedFuelLabel} (${Math.round(fuelPricePerLiterHuf)} Ft/l)
 📊 ${t.averageConsumption}: ${consumptionL100} L/100km
 🛢️ ${t.fuelNeeded}: ${totalLiters.toFixed(1)} L
@@ -122,6 +130,18 @@ ${passengerCount > 1 ? `👥 ${t.splitCost} (${passengerCount} ${t.perPerson}): 
           )}
         </button>
       </div>
+
+      {/* Route Badge if addresses are provided */}
+      {fromAddress?.trim() && toAddress?.trim() && (
+        <div className="mb-4 p-2.5 rounded-xl bg-zinc-950/90 border border-zinc-800 text-xs text-zinc-300 flex items-center gap-2 overflow-hidden relative z-10">
+          <span className="text-emerald-400 shrink-0 text-sm">🚩</span>
+          <div className="flex items-center gap-1.5 truncate text-[11px] sm:text-xs">
+            <span className="truncate font-medium text-zinc-200">{fromAddress.trim()}</span>
+            <span className="text-zinc-500 shrink-0">➔</span>
+            <span className="truncate font-medium text-zinc-200">{toAddress.trim()}</span>
+          </div>
+        </div>
+      )}
 
       {/* Main Big Result */}
       <div className="mb-6 pb-6 border-b border-zinc-800/80 relative z-10">

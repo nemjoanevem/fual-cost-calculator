@@ -146,7 +146,7 @@ export const translations: Record<Language, Translations> = {
     
     kofiButtonText: 'Borravaló',
     kofiTitle: 'Hívj meg egy kávéra!',
-    kofiTooltip: 'Ha hasznosnak találtad az oldalt, hívj meg egy kávéra!',
+    kofiTooltip: 'Ha hasznosnak találtad az oldalt.',
     footerNote: 'Minimalista üzemanyag kalkulátor. Ingyenes OpenStreetMap & OSRM útvonalszámítás, bankkártya- és rejtett díjmentes működés.',
     freeRoutingNotice: '100% ingyenes, kvótamentes útvonal-kalkuláció (OSRM / OpenStreetMap)',
     
@@ -217,7 +217,7 @@ export const translations: Record<Language, Translations> = {
     
     kofiButtonText: 'Tip',
     kofiTitle: 'Buy me a coffee!',
-    kofiTooltip: 'If you liked this tool, buy me a coffee!',
+    kofiTooltip: 'If you liked this tool.',
     footerNote: 'Minimalist fuel calculator. Free OpenStreetMap & OSRM routing, no credit card required, completely free.',
     freeRoutingNotice: '100% Free routing integration (OSRM / OpenStreetMap)',
     

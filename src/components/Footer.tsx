@@ -20,17 +20,17 @@ export const Footer: React.FC<FooterProps> = ({ lang }) => {
             href={APP_CONFIG.kofiUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-medium text-xs sm:text-sm bg-[#FF5E5B] hover:bg-[#ff4642] text-white shadow-lg shadow-[#FF5E5B]/20 transition-all hover:scale-102 active:scale-98 shrink-0 cursor-pointer"
+            className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-xs sm:text-sm bg-[#FF5E5B] hover:bg-[#ff4642] text-white shadow-lg shadow-[#FF5E5B]/20 transition-all hover:scale-102 active:scale-98 shrink-0 cursor-pointer"
           >
-            <Coffee className="w-4 h-4 text-white" />
+            <Heart className="w-4 h-4 text-white fill-white group-hover:scale-115 transition-transform" />
             <span>{t.kofiButtonText}</span>
-            <Heart className="w-3.5 h-3.5 text-white/90 fill-white/80 group-hover:scale-115 transition-transform" />
           </a>
 
           {/* Text beside the button */}
           <div className="text-center sm:text-left">
-            <h4 className="font-semibold text-zinc-100 text-sm sm:text-base">
-              {t.kofiTitle}
+            <h4 className="font-semibold text-zinc-100 text-sm sm:text-base flex items-center justify-center sm:justify-start gap-2">
+              <Coffee className="w-4 h-4 text-[#FF5E5B] shrink-0" />
+              <span>{t.kofiTitle}</span>
             </h4>
             <p className="text-xs text-zinc-400 mt-0.5">
               {t.kofiTooltip}
