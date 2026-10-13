@@ -1,8 +1,7 @@
 /**
- * Routing & Geocoding Service
- * Uses 100% FREE OpenStreetMap Nominatim/Photon and OSRM (Open Source Routing Machine).
- * No billing, no credit card, and zero API keys required.
- * Optional Google Maps integration with strict call limit to prevent accidental billing.
+ * Routing and Geocoding Service
+ * Uses OpenStreetMap Nominatim/Photon for geocoding and OSRM for driving route calculations.
+ * Optionally supports Google Maps Directions API if an API key is provided.
  */
 
 import { APP_CONFIG } from '../config.ts';
@@ -21,18 +20,17 @@ export interface RouteResult {
   source: 'osrm_free' | 'google_maps' | 'estimate';
 }
 
-// Session call counter for Google Maps to strictly enforce free tier limits
+const MAX_GOOGLE_CALLS_PER_SESSION = 50;
 let googleCallsThisSession = 0;
 
 /**
- * Autocomplete address search using free Photon / Nominatim API
+ * Autocomplete address search using Photon / Nominatim API
  */
 export async function searchAddressSuggestions(query: string): Promise<LocationPoint[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
 
   try {
-    // Photon API (komoot) is super fast, free, and based on OpenStreetMap
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3500);
 
@@ -46,7 +44,7 @@ export async function searchAddressSuggestions(query: string): Promise<LocationP
         return data.features.map((feat: any) => {
           const props = feat.properties || {};
           const coords = feat.geometry?.coordinates || [0, 0];
-          
+
           const parts = [
             props.name,
             props.street ? `${props.street} ${props.housenumber || ''}`.trim() : null,
@@ -64,7 +62,7 @@ export async function searchAddressSuggestions(query: string): Promise<LocationP
       }
     }
   } catch {
-    // Fallback to OpenStreetMap Nominatim if photon has a hiccup
+    // Fallback to OpenStreetMap Nominatim if Photon is unavailable
   }
 
   try {
@@ -93,7 +91,7 @@ export async function searchAddressSuggestions(query: string): Promise<LocationP
       }
     }
   } catch {
-    // Return empty on network issues
+    // Return empty array on network failure
   }
 
   return [];
@@ -111,14 +109,13 @@ export async function geocodeAddress(address: string): Promise<LocationPoint | n
 }
 
 /**
- * Calculate driving route between two points using FREE OSRM API
+ * Calculate driving route between two points using OSRM
  */
 async function calculateOsrmRoute(origin: LocationPoint, destination: LocationPoint): Promise<RouteResult | null> {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
 
-    // OSRM Public Driving Server: coordinates are {lon},{lat}
     const url = `https://router.project-osrm.org/route/v1/driving/${origin.lon},${origin.lat};${destination.lon},${destination.lat}?overview=false`;
     const res = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
@@ -146,7 +143,7 @@ async function calculateOsrmRoute(origin: LocationPoint, destination: LocationPo
 }
 
 /**
- * Calculate driving route using Google Maps Directions API (Optional, with strict safety limit)
+ * Calculate driving route using Google Maps Directions API (optional fallback)
  */
 async function calculateGoogleMapsRoute(
   originAddress: string,
@@ -156,10 +153,8 @@ async function calculateGoogleMapsRoute(
     return null;
   }
 
-  if (googleCallsThisSession >= APP_CONFIG.googleMapsSessionLimit) {
-    console.warn(
-      `Google Maps call limit reached (${APP_CONFIG.googleMapsSessionLimit}). Switching to free OSRM to prevent billing.`
-    );
+  if (googleCallsThisSession >= MAX_GOOGLE_CALLS_PER_SESSION) {
+    console.warn('Google Maps request session limit reached, using open routing.');
     return null;
   }
 
@@ -199,10 +194,10 @@ async function calculateGoogleMapsRoute(
 }
 
 /**
- * Great-circle Haversine distance with road winding coefficient as backup
+ * Great-circle Haversine road distance approximation
  */
 function calculateHaversineRoadDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Earth radius in km
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -213,14 +208,12 @@ function calculateHaversineRoadDistance(lat1: number, lon1: number, lat2: number
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const straightKm = R * c;
-  
-  // Real road routes are approximately 1.25x - 1.3x straight distance
   const roadFactor = 1.28;
   return Math.round(straightKm * roadFactor * 10) / 10;
 }
 
 /**
- * Main function: calculate route between 2 addresses or points
+ * Calculate driving distance between two addresses
  */
 export async function calculateRouteBetweenAddresses(
   fromText: string,
@@ -233,13 +226,13 @@ export async function calculateRouteBetweenAddresses(
     return null;
   }
 
-  // 1. If Google Maps is enabled in config and has API key
-  if (APP_CONFIG.routingProvider === 'google' && APP_CONFIG.googleMapsApiKey) {
+  // 1. Google Maps Directions if key provided
+  if (APP_CONFIG.googleMapsApiKey) {
     const googleResult = await calculateGoogleMapsRoute(trimmedFrom, trimmedTo);
     if (googleResult) return googleResult;
   }
 
-  // 2. Geocode both addresses via free OpenStreetMap Photon / Nominatim
+  // 2. Geocode both addresses via OpenStreetMap Photon / Nominatim
   const [fromPoint, toPoint] = await Promise.all([
     geocodeAddress(trimmedFrom),
     geocodeAddress(trimmedTo),
@@ -249,20 +242,20 @@ export async function calculateRouteBetweenAddresses(
     return null;
   }
 
-  // 3. Query free OSRM Driving Engine
+  // 3. Query OSRM
   const osrmResult = await calculateOsrmRoute(fromPoint, toPoint);
   if (osrmResult) {
     return osrmResult;
   }
 
-  // 4. Fallback: Haversine road estimate
+  // 4. Fallback to Haversine estimate
   const estimatedKm = calculateHaversineRoadDistance(
     fromPoint.lat,
     fromPoint.lon,
     toPoint.lat,
     toPoint.lon
   );
-  const estimatedMinutes = Math.round((estimatedKm / 75) * 60); // approx 75 km/h average speed
+  const estimatedMinutes = Math.round((estimatedKm / 75) * 60);
 
   return {
     distanceKm: estimatedKm,

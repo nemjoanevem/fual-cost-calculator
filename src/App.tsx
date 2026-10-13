@@ -10,7 +10,6 @@ import { FuelSelector } from './components/FuelSelector.tsx';
 import { AmortizationSelector } from './components/AmortizationSelector.tsx';
 import { CostSummary } from './components/CostSummary.tsx';
 import { Footer } from './components/Footer.tsx';
-import { ConfigModal } from './components/ConfigModal.tsx';
 import { APP_CONFIG } from './config.ts';
 import {
   COUNTRIES,
@@ -27,7 +26,6 @@ export default function App() {
   const [lang, setLang] = useState<Language>('hu');
   const [currency, setCurrency] = useState<'HUF' | 'EUR' | 'USD'>('HUF');
   const [exchangeRates, setExchangeRates] = useState<ExchangeRates>(getCachedRates());
-  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
   // Country & Fuel
   const [selectedCountry, setSelectedCountry] = useState<CountryFuelData>(
@@ -46,10 +44,10 @@ export default function App() {
   const [consumptionL100, setConsumptionL100] = useState<number>(6.5);
   const [passengerCount, setPassengerCount] = useState<number>(1);
 
-  // Amortization (Amortizációs díj - 15 Ft/km)
+  // Vehicle amortization fee (+15 HUF/km by default)
   const [amortizationEnabled, setAmortizationEnabled] = useState<boolean>(false);
   const [amortizationRateHuf, setAmortizationRateHuf] = useState<number>(
-    APP_CONFIG.defaultAmortizationHufPerKm || 15
+    APP_CONFIG.defaultAmortizationRate || 15
   );
 
   const t = translations[lang];
@@ -118,7 +116,6 @@ export default function App() {
         onLanguageChange={setLang}
         currency={currency}
         onCurrencyChange={setCurrency}
-        onOpenSettings={() => setIsConfigModalOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -204,18 +201,8 @@ export default function App() {
         </div>
       </main>
 
-      {/* Footer with Ko-fi Support */}
-      <Footer
-        lang={lang}
-        onOpenSettings={() => setIsConfigModalOpen(true)}
-      />
-
-      {/* Config & Information Modal */}
-      <ConfigModal
-        isOpen={isConfigModalOpen}
-        onClose={() => setIsConfigModalOpen(false)}
-        lang={lang}
-      />
+      {/* Footer with Support Section */}
+      <Footer lang={lang} />
     </div>
   );
 }

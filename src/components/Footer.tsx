@@ -5,10 +5,9 @@ import { Language, translations } from '../translations.ts';
 
 interface FooterProps {
   lang: Language;
-  onOpenSettings: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ lang, onOpenSettings }) => {
+export const Footer: React.FC<FooterProps> = ({ lang }) => {
   const t = translations[lang];
 
   return (

@@ -74,7 +74,6 @@ export interface Translations {
   kofiTitle: string;
   kofiTooltip: string;
   footerNote: string;
-  configInfo: string;
   freeRoutingNotice: string;
   
   // Tooltips & Info
@@ -149,7 +148,6 @@ export const translations: Record<Language, Translations> = {
     kofiTitle: 'Hívj meg egy kávéra!',
     kofiTooltip: 'Ha hasznosnak találtad az oldalt, hívj meg egy kávéra!',
     footerNote: 'Minimalista üzemanyag kalkulátor. Ingyenes OpenStreetMap & OSRM útvonalszámítás, bankkártya- és rejtett díjmentes működés.',
-    configInfo: 'Beállítások & API kulcsok a beállításokban módosíthatók.',
     freeRoutingNotice: '100% ingyenes, kvótamentes útvonal-kalkuláció (OSRM / OpenStreetMap)',
     
     sourceInfo: 'Forrás: Hivatalos európai átlagárak és középértékek',
@@ -221,7 +219,6 @@ export const translations: Record<Language, Translations> = {
     kofiTitle: 'Buy me a coffee!',
     kofiTooltip: 'If you liked this tool, buy me a coffee!',
     footerNote: 'Minimalist fuel calculator. Free OpenStreetMap & OSRM routing, no credit card required, completely free.',
-    configInfo: 'Settings & API keys can be customized in settings.',
     freeRoutingNotice: '100% Free routing integration (OSRM / OpenStreetMap)',
     
     sourceInfo: 'Source: Official European benchmark fuel prices',

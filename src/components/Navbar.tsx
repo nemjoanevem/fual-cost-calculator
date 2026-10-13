@@ -1,5 +1,5 @@
 import React from 'react';
-import { Fuel, Globe, Settings, Sparkles } from 'lucide-react';
+import { Fuel, Globe, Sparkles } from 'lucide-react';
 import { Language, translations } from '../translations.ts';
 
 interface NavbarProps {
@@ -7,7 +7,6 @@ interface NavbarProps {
   onLanguageChange: (lang: Language) => void;
   currency: 'HUF' | 'EUR' | 'USD';
   onCurrencyChange: (curr: 'HUF' | 'EUR' | 'USD') => void;
-  onOpenSettings: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -15,7 +14,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLanguageChange,
   currency,
   onCurrencyChange,
-  onOpenSettings,
 }) => {
   const t = translations[lang];
 
@@ -91,16 +89,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>EN</span>
             </button>
           </div>
-
-          {/* Config / Info button */}
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 transition-all"
-            title={lang === 'hu' ? 'Beállítások & API Config' : 'Settings & API Config'}
-          >
-            <Settings className="w-4 h-4" />
-          </button>
         </div>
       </div>
     </header>
