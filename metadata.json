@@ -1,0 +1,10 @@
+{
+  "name": "Üzemanyag Kalkulátor - Minimalist Fuel Cost Calculator",
+  "description": "Minimalista üzemanyag és útiköltség kalkulátor aktuális országos üzemanyagárakkal, ingyenes cím-útvonaltervezéssel és amortizációs számítással.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
