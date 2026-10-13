@@ -79,6 +79,8 @@ export interface Translations {
   // Tooltips & Info
   sourceInfo: string;
   freeApiBadge: string;
+  lastUpdated: string;
+  updatingPrices: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -152,6 +154,8 @@ export const translations: Record<Language, Translations> = {
     
     sourceInfo: 'Forrás: Hivatalos európai átlagárak és középértékek',
     freeApiBadge: 'Ingyenes API integráció',
+    lastUpdated: 'Utoljára frissítve',
+    updatingPrices: 'Árak frissítése folyamatban...',
   },
   en: {
     appTitle: 'Fuel Cost Calculator',
@@ -223,5 +227,7 @@ export const translations: Record<Language, Translations> = {
     
     sourceInfo: 'Source: Official European benchmark fuel prices',
     freeApiBadge: 'Free API Integration',
+    lastUpdated: 'Last updated',
+    updatingPrices: 'Updating prices in background...',
   }
 };

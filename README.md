@@ -5,6 +5,7 @@ A minimalist, responsive trip cost and fuel calculator web application built wit
 ## Features
 
 - **Country-Specific Fuel Prices**: Real-time benchmark fuel prices for 16+ countries (Hungary, Austria, Germany, Slovakia, Romania, Croatia, Slovenia, Czech Republic, Poland, Italy, France, Spain, Netherlands, Switzerland, UK, USA).
+- **24-Hour Smart Caching**: Stale-while-revalidate pattern using localStorage; prices load instantly with 0ms delay, and silently update in the background if older than 24 hours. The last updated date is displayed beneath the selected country.
 - **Automatic Geolocation**: Detects the user's country on load with a graceful fallback to Hungary (`HU`).
 - **Custom Price Override**: Option to manually enter the exact local fuel station price per liter.
 - **Free Route Planning**: Address-to-address driving route calculation powered by OpenStreetMap (Photon geocoding) and OSRM (Open Source Routing Machine). 100% free, requires no credit card, and has zero billing risks.

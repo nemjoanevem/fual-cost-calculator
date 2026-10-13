@@ -18,6 +18,8 @@ interface FuelSelectorProps {
   onDetectLocation: () => void;
   isDetectingLocation: boolean;
   locationStatus: string | null;
+  lastUpdatedDate?: string;
+  isUpdatingFuelPrices?: boolean;
 }
 
 export const FuelSelector: React.FC<FuelSelectorProps> = ({
@@ -35,6 +37,8 @@ export const FuelSelector: React.FC<FuelSelectorProps> = ({
   onDetectLocation,
   isDetectingLocation,
   locationStatus,
+  lastUpdatedDate,
+  isUpdatingFuelPrices,
 }) => {
   const t = translations[lang];
 
@@ -126,13 +130,22 @@ export const FuelSelector: React.FC<FuelSelectorProps> = ({
           className="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 flex items-center justify-between transition-all cursor-pointer focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
         >
           <div className="flex items-center gap-2.5">
-            <span className="text-base leading-none">{selectedCountry.flag}</span>
-            <span className="font-medium text-zinc-100">
-              {lang === 'hu' ? selectedCountry.nameHu : selectedCountry.nameEn}
-            </span>
-            <span className="text-xs font-mono-num text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">
-              {selectedCountry.currency}
-            </span>
+            <span className="text-xl leading-none shrink-0">{selectedCountry.flag}</span>
+            <div className="text-left min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-medium text-zinc-100 truncate">
+                  {lang === 'hu' ? selectedCountry.nameHu : selectedCountry.nameEn}
+                </span>
+                <span className="text-xs font-mono-num text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">
+                  {selectedCountry.currency}
+                </span>
+              </div>
+              {lastUpdatedDate && (
+                <span className="text-[11px] text-zinc-500 font-normal block mt-0.5">
+                  {isUpdatingFuelPrices ? t.updatingPrices : `${t.lastUpdated}: ${lastUpdatedDate}`}
+                </span>
+              )}
+            </div>
           </div>
           <ChevronDown
             className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${

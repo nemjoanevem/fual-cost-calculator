@@ -17,6 +17,10 @@ import {
   FuelTypeKey,
   detectUserCountry,
   getCountryData,
+  getFuelPricesCache,
+  checkAndUpdateFuelPrices,
+  formatLastUpdatedDate,
+  FuelPricesCache,
 } from './services/fuelApi.ts';
 import { fetchLiveExchangeRates, getCachedRates, ExchangeRates } from './services/currencyApi.ts';
 import { Language, translations } from './translations.ts';
@@ -27,9 +31,10 @@ export default function App() {
   const [currency, setCurrency] = useState<'HUF' | 'EUR' | 'USD'>('HUF');
   const [exchangeRates, setExchangeRates] = useState<ExchangeRates>(getCachedRates());
 
-  // Country & Fuel
-  const [selectedCountry, setSelectedCountry] = useState<CountryFuelData>(
-    getCountryData(APP_CONFIG.defaultCountry || 'HU')
+  // Cached fuel prices & country selection
+  const [fuelCache, setFuelCache] = useState<FuelPricesCache>(() => getFuelPricesCache());
+  const [selectedCountry, setSelectedCountry] = useState<CountryFuelData>(() =>
+    getCountryData(APP_CONFIG.defaultCountry || 'HU', fuelCache.countries)
   );
   const [selectedFuelType, setSelectedFuelType] = useState<FuelTypeKey>('petrol95');
   const [customPriceEnabled, setCustomPriceEnabled] = useState(false);
@@ -54,11 +59,21 @@ export default function App() {
 
   const t = translations[lang];
 
-  // Auto-detect location & fetch live exchange rates on mount
+  // Auto-detect location, fetch live exchange rates, and check fuel price cache on mount
   useEffect(() => {
     handleDetectLocation(true);
     fetchLiveExchangeRates().then((rates) => {
       setExchangeRates(rates);
+    });
+
+    // Background 24h fuel price freshness check
+    checkAndUpdateFuelPrices(fuelCache).then((res) => {
+      if (res.updated) {
+        setFuelCache(res.cache);
+        setSelectedCountry((prev) =>
+          getCountryData(prev.code, res.cache.countries)
+        );
+      }
     });
   }, []);
 
@@ -70,7 +85,7 @@ export default function App() {
 
     try {
       const result = await detectUserCountry();
-      const detected = getCountryData(result.countryCode);
+      const detected = getCountryData(result.countryCode, fuelCache.countries);
       setSelectedCountry(detected);
 
       if (result.method === 'default') {
@@ -83,7 +98,7 @@ export default function App() {
         );
       }
     } catch {
-      setSelectedCountry(getCountryData('HU'));
+      setSelectedCountry(getCountryData('HU', fuelCache.countries));
       if (!isInitial) setLocationStatus(t.locationFailed);
     } finally {
       setIsDetectingLocation(false);
@@ -175,6 +190,7 @@ export default function App() {
               onDetectLocation={() => handleDetectLocation(false)}
               isDetectingLocation={isDetectingLocation}
               locationStatus={locationStatus}
+              lastUpdatedDate={formatLastUpdatedDate(fuelCache.lastUpdatedTimestamp, lang)}
             />
 
             {/* 3. Amortization Fee Checkbox (+15 Ft/km) */}

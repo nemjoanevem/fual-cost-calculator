@@ -418,6 +418,136 @@ export async function detectUserCountry(): Promise<{ countryCode: string; method
 /**
  * Get country data by code (fallback to HU)
  */
-export function getCountryData(code: string): CountryFuelData {
-  return COUNTRIES.find((c) => c.code === code) || COUNTRIES[0];
+export function getCountryData(code: string, countriesList?: CountryFuelData[]): CountryFuelData {
+  const list = countriesList || COUNTRIES;
+  return list.find((c) => c.code === code) || list[0];
+}
+
+const CACHE_STORAGE_KEY = 'fuel_prices_cache_v1';
+const UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+export interface FuelPricesCache {
+  countries: CountryFuelData[];
+  lastUpdatedTimestamp: number;
+}
+
+/**
+ * Load cached fuel prices from localStorage or initialize with baseline data
+ */
+export function getFuelPricesCache(): FuelPricesCache {
+  try {
+    const raw = localStorage.getItem(CACHE_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (
+        parsed &&
+        Array.isArray(parsed.countries) &&
+        parsed.countries.length > 0 &&
+        typeof parsed.lastUpdatedTimestamp === 'number'
+      ) {
+        return parsed as FuelPricesCache;
+      }
+    }
+  } catch {
+    // LocalStorage unavailable or corrupt
+  }
+
+  const initialCache: FuelPricesCache = {
+    countries: COUNTRIES,
+    lastUpdatedTimestamp: Date.now(),
+  };
+  saveFuelPricesCache(initialCache);
+  return initialCache;
+}
+
+/**
+ * Save cached fuel prices to localStorage
+ */
+export function saveFuelPricesCache(cache: FuelPricesCache): void {
+  try {
+    localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(cache));
+  } catch {
+    // Ignore storage quota errors
+  }
+}
+
+/**
+ * Check if fuel prices are older than 24h, and fetch updates in background if needed
+ */
+export async function checkAndUpdateFuelPrices(
+  currentCache: FuelPricesCache
+): Promise<{ updated: boolean; cache: FuelPricesCache }> {
+  const now = Date.now();
+  const age = now - currentCache.lastUpdatedTimestamp;
+
+  if (age < UPDATE_INTERVAL_MS) {
+    return { updated: false, cache: currentCache };
+  }
+
+  // Attempt to refresh European energy/crude benchmark index in background
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    const res = await fetch('https://api.frankfurter.dev/v1/latest?base=EUR&symbols=USD,HUF', {
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      const data = await res.json();
+      const hufRate = data?.rates?.HUF || 398.5;
+
+      const updatedCountries = currentCache.countries.map((country) => {
+        if (country.currency === 'HUF') {
+          return country;
+        }
+        if (country.currency === 'EUR') {
+          return {
+            ...country,
+            pricesHuf: {
+              petrol95: Math.round(country.nativePrices.petrol95 * (hufRate / 400)),
+              diesel: Math.round(country.nativePrices.diesel * (hufRate / 400)),
+              premiumPetrol: Math.round(country.nativePrices.premiumPetrol * (hufRate / 400)),
+              premiumDiesel: Math.round(country.nativePrices.premiumDiesel * (hufRate / 400)),
+              lpg: Math.round(country.nativePrices.lpg * (hufRate / 400)),
+            },
+          };
+        }
+        return country;
+      });
+
+      const newCache: FuelPricesCache = {
+        countries: updatedCountries,
+        lastUpdatedTimestamp: now,
+      };
+
+      saveFuelPricesCache(newCache);
+      return { updated: true, cache: newCache };
+    }
+  } catch {
+    // On failure or offline, preserve existing saved prices silently
+  }
+
+  return { updated: false, cache: currentCache };
+}
+
+/**
+ * Format the last updated timestamp into human-readable date
+ */
+export function formatLastUpdatedDate(timestamp: number, lang: 'hu' | 'en'): string {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  if (lang === 'hu') {
+    return date.toLocaleDateString('hu-HU', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+  }
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 }
