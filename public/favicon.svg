@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Rounded Background Container -->
+  <rect width="32" height="32" rx="8" fill="#0C0E14"/>
+  <rect x="0.5" y="0.5" width="31" height="31" rx="7.5" stroke="#10B981" stroke-opacity="0.3"/>
+  
+  <!-- Subtle Emerald Glow -->
+  <circle cx="14" cy="16" r="10" fill="#10B981" fill-opacity="0.12"/>
+
+  <!-- Fuel Pump Body -->
+  <path d="M6 9C6 7.89543 6.89543 7 8 7H17C18.1046 7 19 7.89543 19 9V24C19 24.5523 18.5523 25 18 25H7C6.44772 25 6 24.5523 6 24V9Z" fill="#10B981" fill-opacity="0.2" stroke="#10B981" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Meter Screen -->
+  <rect x="9" y="10" width="7" height="4" rx="1" fill="#0C0E14" stroke="#34D399" stroke-width="1.2"/>
+  <path d="M11 12H14" stroke="#10B981" stroke-width="1" stroke-linecap="round"/>
+
+  <!-- Hose and Nozzle -->
+  <path d="M19 12H21C22.6569 12 24 13.3431 24 15V20C24 21.1046 24.8954 22 26 22C26.5523 22 27 21.5523 27 21V13.5L25 11" stroke="#34D399" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Fuel Level / Drop indicator -->
+  <circle cx="12.5" cy="18.5" r="1.5" fill="#34D399"/>
+</svg>
