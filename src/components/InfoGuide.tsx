@@ -16,14 +16,14 @@ export const InfoGuide: React.FC<InfoGuideProps> = ({ lang }) => {
           <HelpCircle className="w-4 h-4" />
         </div>
         <h2 id="how-it-works-title" className="text-base sm:text-lg font-semibold text-zinc-100">
-          {isHu ? 'Hogyan működik az üzemanyagköltség kalkulátor?' : 'How does the fuel cost calculator work?'}
+          {isHu ? 'Hogyan működik az üzemanyag kalkulátor?' : 'How does the fuel calculator work?'}
         </h2>
       </div>
 
       <p className="text-xs sm:text-sm text-zinc-400 max-w-3xl leading-relaxed mb-6">
         {isHu
-          ? 'Az eszköz célja, hogy gyorsan, pontosan és rejtett költségek nélkül kiszámolja az autóutak teljes üzemanyag- és járulékos költségét magánszemélyeknek, céges kiküldetésekhez vagy baráti utazásokhoz.'
-          : 'This tool is designed to quickly and accurately calculate the complete fuel and vehicle expenses for private road trips, business allowance reimbursements, or shared travel.'}
+          ? 'Az eszköz célja, hogy gyorsan és pontosan egy helyen kiszámolja az autóutak teljes üzemanyag- és járulékos költségét különböző utazásokhoz.'
+          : 'This tool is designed to quickly and accurately calculate the complete fuel and vehicle expenses for various road trips in one place.'}
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
