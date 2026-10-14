@@ -9,6 +9,7 @@ import { TripForm } from './components/TripForm.tsx';
 import { FuelSelector } from './components/FuelSelector.tsx';
 import { AmortizationSelector } from './components/AmortizationSelector.tsx';
 import { CostSummary } from './components/CostSummary.tsx';
+import { InfoGuide } from './components/InfoGuide.tsx';
 import { Footer } from './components/Footer.tsx';
 import { APP_CONFIG } from './config.ts';
 import {
@@ -143,9 +144,9 @@ export default function App() {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
             <span>{t.badgeLivePrices} &bull; {selectedCountry.flag} {lang === 'hu' ? selectedCountry.nameHu : selectedCountry.nameEn}</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
             {t.appTitle}
-          </h2>
+          </h1>
           <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl">
             {t.appSubtitle}
           </p>
@@ -223,6 +224,9 @@ export default function App() {
             />
           </div>
         </div>
+
+        {/* SEO & Usage Guide Section */}
+        <InfoGuide lang={lang} />
       </main>
 
       {/* Footer with Support Section */}

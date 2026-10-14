@@ -27,9 +27,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-semibold text-zinc-100 tracking-tight text-base sm:text-lg">
+              <span className="font-semibold text-zinc-100 tracking-tight text-base sm:text-lg">
                 {t.appTitle}
-              </h1>
+              </span>
               <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-medium tracking-wide uppercase px-1.5 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/50">
                 <Sparkles className="w-2.5 h-2.5" /> Free API
               </span>
