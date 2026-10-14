@@ -146,7 +146,7 @@ export const translations: Record<Language, Translations> = {
     noAddressFound: 'Nem található a keresésnek megfelelő cím',
     liveFxRate: 'Valós idejű banki devizaárfolyam',
     
-    kofiButtonText: 'Borravaló',
+    kofiButtonText: 'Jatt',
     kofiTitle: 'Hívj meg egy kávéra!',
     kofiTooltip: 'Ha hasznosnak találtad az oldalt.',
     footerNote: 'Minimalista üzemanyag kalkulátor. Ingyenes OpenStreetMap & OSRM útvonalszámítás, bankkártya- és rejtett díjmentes működés.',

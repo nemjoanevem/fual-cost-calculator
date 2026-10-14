@@ -205,20 +205,8 @@ export const TripForm: React.FC<TripFormProps> = ({
         <div className="grid grid-cols-2 gap-1.5 p-1 bg-zinc-950 border border-zinc-800 rounded-xl">
           <button
             type="button"
-            onClick={() => onTripModeChange('route')}
-            className={`py-2 px-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 ${
-              tripMode === 'route'
-                ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700/60'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-            <span>{t.tripPlanner}</span>
-          </button>
-          <button
-            type="button"
             onClick={() => onTripModeChange('direct')}
-            className={`py-2 px-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 ${
+            className={`py-2 px-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 cursor-pointer ${
               tripMode === 'direct'
                 ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700/60'
                 : 'text-zinc-400 hover:text-zinc-200'
@@ -226,6 +214,18 @@ export const TripForm: React.FC<TripFormProps> = ({
           >
             <Gauge className="w-3.5 h-3.5 text-emerald-400" />
             <span>{t.directDistance}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onTripModeChange('route')}
+            className={`py-2 px-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              tripMode === 'route'
+                ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700/60'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+            <span>{t.tripPlanner}</span>
           </button>
         </div>
       </div>

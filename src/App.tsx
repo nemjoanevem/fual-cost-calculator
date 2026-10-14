@@ -44,7 +44,7 @@ export default function App() {
   const [locationStatus, setLocationStatus] = useState<string | null>(null);
 
   // Trip details
-  const [tripMode, setTripMode] = useState<'route' | 'direct'>('route');
+  const [tripMode, setTripMode] = useState<'route' | 'direct'>('direct');
   const [fromAddress, setFromAddress] = useState<string>('');
   const [toAddress, setToAddress] = useState<string>('');
   const [distanceKm, setDistanceKm] = useState<number>(120);
