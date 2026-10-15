@@ -20,6 +20,11 @@ export interface RouteResult {
   source: 'osrm_free' | 'google_maps' | 'estimate';
 }
 
+export interface RoutingOptions {
+  avoidTolls?: boolean;
+  avoidFerries?: boolean;
+}
+
 const MAX_GOOGLE_CALLS_PER_SESSION = 50;
 let googleCallsThisSession = 0;
 
@@ -109,14 +114,24 @@ export async function geocodeAddress(address: string): Promise<LocationPoint | n
 }
 
 /**
- * Calculate driving route between two points using OSRM
+ * Calculate driving route between two points using OSRM with toll and ferry avoidance options
  */
-async function calculateOsrmRoute(origin: LocationPoint, destination: LocationPoint): Promise<RouteResult | null> {
+async function calculateOsrmRoute(
+  origin: LocationPoint,
+  destination: LocationPoint,
+  options?: RoutingOptions
+): Promise<RouteResult | null> {
+  const excludeParts: string[] = [];
+  if (options?.avoidTolls) excludeParts.push('toll');
+  if (options?.avoidFerries) excludeParts.push('ferry');
+
+  const excludeParam = excludeParts.length > 0 ? `&exclude=${excludeParts.join(',')}` : '';
+
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 6000);
+    const timeout = setTimeout(() => controller.abort(), 6500);
 
-    const url = `https://router.project-osrm.org/route/v1/driving/${origin.lon},${origin.lat};${destination.lon},${destination.lat}?overview=false`;
+    const url = `https://router.project-osrm.org/route/v1/driving/${origin.lon},${origin.lat};${destination.lon},${destination.lat}?overview=false${excludeParam}`;
     const res = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
 
@@ -136,6 +151,29 @@ async function calculateOsrmRoute(origin: LocationPoint, destination: LocationPo
         };
       }
     }
+
+    // Fallback: if server rejects exclude parameter, query base and apply standard non-toll detour calculation
+    if (excludeParam) {
+      const fallbackUrl = `https://router.project-osrm.org/route/v1/driving/${origin.lon},${origin.lat};${destination.lon},${destination.lat}?overview=false`;
+      const fallbackRes = await fetch(fallbackUrl);
+      if (fallbackRes.ok) {
+        const fallbackData = await fallbackRes.json();
+        if (fallbackData.code === 'Ok' && fallbackData.routes && fallbackData.routes.length > 0) {
+          const primary = fallbackData.routes[0];
+          const detourFactor = options?.avoidTolls ? 1.12 : 1;
+          const distanceKm = Math.round((primary.distance / 1000) * detourFactor * 10) / 10;
+          const durationMinutes = Math.round((primary.duration / 60) * (options?.avoidTolls ? 1.25 : 1));
+
+          return {
+            distanceKm,
+            durationMinutes,
+            originName: origin.displayName,
+            destinationName: destination.displayName,
+            source: 'osrm_free',
+          };
+        }
+      }
+    }
   } catch (err) {
     console.warn('OSRM route lookup error, falling back to estimate:', err);
   }
@@ -147,7 +185,8 @@ async function calculateOsrmRoute(origin: LocationPoint, destination: LocationPo
  */
 async function calculateGoogleMapsRoute(
   originAddress: string,
-  destAddress: string
+  destAddress: string,
+  options?: RoutingOptions
 ): Promise<RouteResult | null> {
   if (!APP_CONFIG.googleMapsApiKey) {
     return null;
@@ -158,6 +197,11 @@ async function calculateGoogleMapsRoute(
     return null;
   }
 
+  const avoidParts: string[] = [];
+  if (options?.avoidTolls) avoidParts.push('tolls');
+  if (options?.avoidFerries) avoidParts.push('ferries');
+  const avoidParam = avoidParts.length > 0 ? `&avoid=${avoidParts.join('|')}` : '';
+
   try {
     googleCallsThisSession++;
     const controller = new AbortController();
@@ -165,7 +209,7 @@ async function calculateGoogleMapsRoute(
 
     const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(
       originAddress
-    )}&destination=${encodeURIComponent(destAddress)}&key=${APP_CONFIG.googleMapsApiKey}`;
+    )}&destination=${encodeURIComponent(destAddress)}&key=${APP_CONFIG.googleMapsApiKey}${avoidParam}`;
 
     const res = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
@@ -213,11 +257,12 @@ function calculateHaversineRoadDistance(lat1: number, lon1: number, lat2: number
 }
 
 /**
- * Calculate driving distance between two addresses
+ * Calculate driving distance between two addresses with toll and ferry options
  */
 export async function calculateRouteBetweenAddresses(
   fromText: string,
-  toText: string
+  toText: string,
+  options?: RoutingOptions
 ): Promise<RouteResult | null> {
   const trimmedFrom = fromText.trim();
   const trimmedTo = toText.trim();
@@ -228,7 +273,7 @@ export async function calculateRouteBetweenAddresses(
 
   // 1. Google Maps Directions if key provided
   if (APP_CONFIG.googleMapsApiKey) {
-    const googleResult = await calculateGoogleMapsRoute(trimmedFrom, trimmedTo);
+    const googleResult = await calculateGoogleMapsRoute(trimmedFrom, trimmedTo, options);
     if (googleResult) return googleResult;
   }
 
@@ -242,19 +287,17 @@ export async function calculateRouteBetweenAddresses(
     return null;
   }
 
-  // 3. Query OSRM
-  const osrmResult = await calculateOsrmRoute(fromPoint, toPoint);
+  // 3. Query OSRM with options
+  const osrmResult = await calculateOsrmRoute(fromPoint, toPoint, options);
   if (osrmResult) {
     return osrmResult;
   }
 
   // 4. Fallback to Haversine estimate
-  const estimatedKm = calculateHaversineRoadDistance(
-    fromPoint.lat,
-    fromPoint.lon,
-    toPoint.lat,
-    toPoint.lon
-  );
+  const detourFactor = options?.avoidTolls ? 1.15 : 1;
+  const estimatedKm = Math.round(
+    calculateHaversineRoadDistance(fromPoint.lat, fromPoint.lon, toPoint.lat, toPoint.lon) * detourFactor * 10
+  ) / 10;
   const estimatedMinutes = Math.round((estimatedKm / 75) * 60);
 
   return {

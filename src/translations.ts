@@ -23,6 +23,8 @@ export interface Translations {
   durationLabel: string;
   roundTrip: string;
   roundTripNotice: string;
+  avoidTolls: string;
+  avoidFerries: string;
   
   // Fuel & Consumption
   fuelType: string;
@@ -86,7 +88,7 @@ export interface Translations {
 export const translations: Record<Language, Translations> = {
   hu: {
     appTitle: 'Üzemanyag Kalkulátor',
-    appSubtitle: 'Pontos útiköltség-számítás valós idejű üzemanyagárakkal és ingyenes útvonaltervezővel',
+    appSubtitle: 'Pontos útiköltség-számítás valós idejű üzemanyagárakkal és útvonaltervezővel',
     badgeLivePrices: 'Országos átlagárak',
     
     tripPlanner: 'Címek megadása (Útvonaltervező)',
@@ -105,6 +107,8 @@ export const translations: Record<Language, Translations> = {
     durationLabel: 'Menetidő',
     roundTrip: 'Oda-vissza út (x2 távolság)',
     roundTripNotice: 'A számítás a visszautat is tartalmazza',
+    avoidTolls: 'Fizetős utak elkerülése',
+    avoidFerries: 'Kompok elkerülése',
     
     fuelType: 'Üzemanyag típusa',
     petrol95: '95 Benzin',
@@ -149,17 +153,17 @@ export const translations: Record<Language, Translations> = {
     kofiButtonText: 'Jatt',
     kofiTitle: 'Hívj meg egy kávéra!',
     kofiTooltip: 'Ha hasznosnak találtad az oldalt.',
-    footerNote: 'Minimalista üzemanyag kalkulátor. Ingyenes OpenStreetMap & OSRM útvonalszámítás, bankkártya- és rejtett díjmentes működés.',
-    freeRoutingNotice: '100% ingyenes, kvótamentes útvonal-kalkuláció (OSRM / OpenStreetMap)',
+    footerNote: 'Minimalista üzemanyag kalkulátor OpenStreetMap & OSRM útvonalszámítással.',
+    freeRoutingNotice: 'OpenStreetMap & OSRM útvonal-kalkuláció',
     
     sourceInfo: 'Forrás: Hivatalos európai átlagárak és középértékek',
-    freeApiBadge: 'Ingyenes API integráció',
+    freeApiBadge: 'API integráció',
     lastUpdated: 'Utoljára frissítve',
     updatingPrices: 'Árak frissítése folyamatban...',
   },
   en: {
     appTitle: 'Fuel Cost Calculator',
-    appSubtitle: 'Accurate trip cost calculations with real-time fuel prices and free route planning',
+    appSubtitle: 'Accurate trip cost calculations with real-time fuel prices and route planning',
     badgeLivePrices: 'National Average Prices',
     
     tripPlanner: 'Route Planner (Two Addresses)',
@@ -178,6 +182,8 @@ export const translations: Record<Language, Translations> = {
     durationLabel: 'Est. Drive Time',
     roundTrip: 'Round Trip (2x distance)',
     roundTripNotice: 'Calculation includes the return trip',
+    avoidTolls: 'Avoid toll roads',
+    avoidFerries: 'Avoid ferries',
     
     fuelType: 'Fuel Type',
     petrol95: '95 Petrol / Gas',
@@ -222,11 +228,11 @@ export const translations: Record<Language, Translations> = {
     kofiButtonText: 'Tip',
     kofiTitle: 'Buy me a coffee!',
     kofiTooltip: 'If you liked this tool.',
-    footerNote: 'Minimalist fuel calculator. Free OpenStreetMap & OSRM routing, no credit card required, completely free.',
-    freeRoutingNotice: '100% Free routing integration (OSRM / OpenStreetMap)',
+    footerNote: 'Minimalist fuel calculator with OpenStreetMap & OSRM routing.',
+    freeRoutingNotice: 'OpenStreetMap & OSRM routing',
     
     sourceInfo: 'Source: Official European benchmark fuel prices',
-    freeApiBadge: 'Free API Integration',
+    freeApiBadge: 'API Integration',
     lastUpdated: 'Last updated',
     updatingPrices: 'Updating prices in background...',
   }

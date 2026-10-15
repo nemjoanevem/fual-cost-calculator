@@ -8,12 +8,12 @@ A minimalist, responsive trip cost and fuel calculator web application built wit
 - **24-Hour Smart Caching**: Stale-while-revalidate pattern using localStorage; prices load instantly with 0ms delay, and silently update in the background if older than 24 hours. The last updated date is displayed beneath the selected country.
 - **Automatic Geolocation**: Detects the user's country on load with a graceful fallback to Hungary (`HU`).
 - **Custom Price Override**: Option to manually enter the exact local fuel station price per liter.
-- **Free Route Planning**: Address-to-address driving route calculation powered by OpenStreetMap (Photon geocoding) and OSRM (Open Source Routing Machine). 100% free, requires no credit card, and has zero billing risks.
+- **Route Planning**: Address-to-address driving route calculation powered by OpenStreetMap (Photon geocoding) and OSRM, with options to avoid toll roads and ferries.
 - **Autocomplete Address Search**: Instant feedback dropdown with an animated loading spinner while querying address suggestions.
-- **Direct Distance Mode**: Quick input for known driving distances with one-click presets (25, 50, 100, 150, 250, 500 km).
+- **Direct Distance Mode**: Clean input for known driving distances (default: 120 km).
 - **Vehicle Amortization Fee**: Checkbox to include standard wear, depreciation, and maintenance fees (defaults to +15 HUF/km).
-- **Real-Time Currency Conversion**: Live exchange rates fetched via free public APIs (`open.er-api.com` / `frankfurter.dev`) for HUF, EUR, and USD.
-- **Passenger Cost Splitting**: Calculate split costs per person for 1 to 8 passengers.
+- **Real-Time Currency Conversion**: Live exchange rates fetched via public APIs (`open.er-api.com` / `frankfurter.dev`) for HUF, EUR, and USD.
+- **Passenger Cost Splitting**: Calculate split costs per person with customizable passenger count (default: 1 person).
 - **Round-Trip Toggle**: Easily double distance and calculations for return journeys.
 - **Bilingual Interface**: Full support for Hungarian (default) and English.
 - **Minimalist Responsive Design**: Clean dark interface optimized for mobile, tablet, and desktop screens.

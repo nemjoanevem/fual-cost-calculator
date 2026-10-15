@@ -36,7 +36,7 @@ export const InfoGuide: React.FC<InfoGuideProps> = ({ lang }) => {
           <p className="text-xs text-zinc-400 leading-relaxed">
             {isHu
               ? 'Add meg az indulási és érkezési címet az automatikus útvonaltervezéshez, vagy írd be közvetlenül a kilométert oda-vissza opcióval.'
-              : 'Enter origin and destination addresses for free route calculation, or type the exact distance directly with round-trip support.'}
+              : 'Enter origin and destination addresses for automatic route calculation, or type the exact distance directly with round-trip support.'}
           </p>
         </div>
 

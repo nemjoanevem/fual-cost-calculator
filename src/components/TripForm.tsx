@@ -70,6 +70,8 @@ export const TripForm: React.FC<TripFormProps> = ({
   const [isSearchingRoute, setIsSearchingRoute] = useState(false);
   const [routeInfo, setRouteInfo] = useState<RouteResult | null>(null);
   const [routeError, setRouteError] = useState<string | null>(null);
+  const [avoidTolls, setAvoidTolls] = useState(false);
+  const [avoidFerries, setAvoidFerries] = useState(false);
 
   // Wrapper refs for closing dropdown on outside click
   const fromWrapperRef = useRef<HTMLDivElement>(null);
@@ -157,7 +159,10 @@ export const TripForm: React.FC<TripFormProps> = ({
     setRouteError(null);
 
     try {
-      const res = await calculateRouteBetweenAddresses(fromAddress, toAddress);
+      const res = await calculateRouteBetweenAddresses(fromAddress, toAddress, {
+        avoidTolls,
+        avoidFerries,
+      });
       if (res) {
         setRouteInfo(res);
         onDistanceKmChange(res.distanceKm);
@@ -170,17 +175,6 @@ export const TripForm: React.FC<TripFormProps> = ({
       setIsSearchingRoute(false);
     }
   };
-
-  // Consumption presets
-  const consumptionPresets = [
-    { label: lang === 'hu' ? 'Takarékos dízel' : 'Eco Diesel', val: 4.8 },
-    { label: lang === 'hu' ? 'Átlagos benzines' : 'Standard Petrol', val: 6.5 },
-    { label: lang === 'hu' ? 'Városi / SUV' : 'City / SUV', val: 8.5 },
-    { label: lang === 'hu' ? 'Nagyobb motor' : 'Large Engine', val: 10.5 },
-  ];
-
-  // Quick distance chips for direct distance mode
-  const distanceChips = [25, 50, 100, 150, 250, 500];
 
   return (
     <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 sm:p-6 backdrop-blur-xs space-y-6">
@@ -357,6 +351,32 @@ export const TripForm: React.FC<TripFormProps> = ({
             )}
           </div>
 
+          {/* Avoidance Options */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+            <label className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-950 border border-zinc-800 hover:border-zinc-700 cursor-pointer select-none transition-colors">
+              <input
+                type="checkbox"
+                checked={avoidTolls}
+                onChange={(e) => setAvoidTolls(e.target.checked)}
+                className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 accent-emerald-500 cursor-pointer shrink-0"
+              />
+              <span className="text-xs text-zinc-300 font-medium">
+                {t.avoidTolls}
+              </span>
+            </label>
+            <label className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-950 border border-zinc-800 hover:border-zinc-700 cursor-pointer select-none transition-colors">
+              <input
+                type="checkbox"
+                checked={avoidFerries}
+                onChange={(e) => setAvoidFerries(e.target.checked)}
+                className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 accent-emerald-500 cursor-pointer shrink-0"
+              />
+              <span className="text-xs text-zinc-300 font-medium">
+                {t.avoidFerries}
+              </span>
+            </label>
+          </div>
+
           {/* Calculate button */}
           <button
             type="button"
@@ -394,7 +414,7 @@ export const TripForm: React.FC<TripFormProps> = ({
                   {t.routeFound}
                 </span>
                 <span className="text-[10px] text-zinc-400 px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800">
-                  {routeInfo.source === 'osrm_free' ? 'OSRM (OpenStreetMap) Free' : 'Distance Matrix'}
+                  {routeInfo.source === 'osrm_free' ? 'OSRM (OpenStreetMap)' : 'Distance Matrix'}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 pt-1 border-t border-zinc-800/60 font-mono-num">
@@ -432,30 +452,12 @@ export const TripForm: React.FC<TripFormProps> = ({
               step="1"
               value={distanceKm || ''}
               onChange={(e) => onDistanceKmChange(Math.max(0, parseFloat(e.target.value) || 0))}
-              placeholder="Pl. 140"
+              placeholder="120"
               className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-base sm:text-sm font-mono-num text-zinc-100 focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
             />
             <span className="absolute right-3.5 top-2.5 text-xs font-mono-num text-zinc-400">
               km
             </span>
-          </div>
-
-          {/* Quick distance presets */}
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {distanceChips.map((km) => (
-              <button
-                key={km}
-                type="button"
-                onClick={() => onDistanceKmChange(km)}
-                className={`text-xs px-2.5 py-1 rounded-lg border font-mono-num transition-all ${
-                  distanceKm === km
-                    ? 'bg-emerald-950/50 border-emerald-500 text-emerald-300'
-                    : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
-                }`}
-              >
-                {km} km
-              </button>
-            ))}
           </div>
         </div>
       )}
@@ -502,59 +504,36 @@ export const TripForm: React.FC<TripFormProps> = ({
             step="0.1"
             value={consumptionL100 || ''}
             onChange={(e) => onConsumptionChange(Math.max(0, parseFloat(e.target.value) || 0))}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm font-mono-num text-zinc-100 focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            placeholder="6.5"
+            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-base sm:text-sm font-mono-num text-zinc-100 focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
           />
           <span className="absolute right-3.5 top-2.5 text-xs font-mono-num text-zinc-400">
             L / 100km
           </span>
         </div>
-
-        {/* Consumption Presets */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
-          {consumptionPresets.map((p) => (
-            <button
-              key={p.val}
-              type="button"
-              onClick={() => onConsumptionChange(p.val)}
-              className={`text-[11px] p-1.5 rounded-lg border text-center transition-all ${
-                consumptionL100 === p.val
-                  ? 'bg-emerald-950/50 border-emerald-500 text-emerald-300'
-                  : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              <div className="font-mono-num font-semibold">{p.val} L</div>
-              <div className="text-[10px] text-zinc-400 truncate">{p.label}</div>
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Passenger Split (Utasok száma) */}
       <div className="pt-2 border-t border-zinc-800/60">
-        <div className="flex items-center justify-between mb-2">
-          <label className="text-xs font-medium text-zinc-400 flex items-center gap-1.5">
-            <Users className="w-3.5 h-3.5 text-emerald-400" />
-            <span>{t.passengers}</span>
-          </label>
-          <span className="text-xs font-mono-num text-emerald-400 font-semibold">
-            {passengerCount} {t.perPerson}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
-            <button
-              key={num}
-              type="button"
-              onClick={() => onPassengerCountChange(num)}
-              className={`flex-1 py-1.5 rounded-lg border text-xs font-mono-num font-medium transition-all ${
-                passengerCount === num
-                  ? 'bg-emerald-600/30 border-emerald-500 text-emerald-300'
-                  : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              {num}
-            </button>
-          ))}
+        <label className="text-xs font-medium text-zinc-400 flex items-center gap-1.5 mb-2">
+          <Users className="w-3.5 h-3.5 text-emerald-400" />
+          <span>{t.passengers}</span>
+        </label>
+        <div className="flex items-center gap-3">
+          <div className="relative w-28">
+            <input
+              type="number"
+              min="1"
+              max="50"
+              step="1"
+              value={passengerCount || 1}
+              onChange={(e) => onPassengerCountChange(Math.max(1, parseInt(e.target.value, 10) || 1))}
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-base sm:text-sm font-mono-num font-semibold text-zinc-100 focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            />
+            <span className="absolute right-3.5 top-2 text-xs text-zinc-400 font-medium">
+              {t.perPerson}
+            </span>
+          </div>
         </div>
       </div>
     </div>
