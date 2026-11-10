@@ -368,16 +368,57 @@ export const COUNTRIES: CountryFuelData[] = [
 export type FuelTypeKey = 'petrol95' | 'diesel' | 'premiumPetrol' | 'premiumDiesel' | 'lpg';
 
 /**
- * Detect user's country using browser Geolocation or IP-based fallback
- * Always returns 'HU' if detection is blocked, unavailable, or unsupported.
+ * Detect user's country using real browser GPS Geolocation (with Nominatim reverse geocoding),
+ * multi-tier IP-based lookups (ipwho.is, ipapi.co), or browser locale heuristics.
+ * Defaults to 'HU' if detection fails or is denied.
  */
-export async function detectUserCountry(): Promise<{ countryCode: string; method: 'gps' | 'ip' | 'default' }> {
-  // Method 1: IP-based lookup (fastest & doesn't trigger scary browser permission popups unless desired)
+export async function detectUserCountry(options?: { preferGps?: boolean }): Promise<{ countryCode: string; method: 'gps' | 'ip' | 'default' }> {
+  // Method 1: Accurate Device GPS Geolocation
+  // If the browser supports geolocation, query coordinates and reverse-geocode to ISO country code.
+  if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 6000,
+          maximumAge: 300000, // 5 min cache
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+
+      // Reverse geocode via OpenStreetMap Nominatim
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`;
+        const res = await fetch(url, {
+          signal: controller.signal,
+          headers: {
+            'User-Agent': 'FuelCalculatorApp/1.0 (https://fuelcalc.app)',
+          },
+        });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const data = await res.json();
+          const countryCode = data?.address?.country_code?.toUpperCase();
+          if (countryCode && COUNTRIES.some((c) => c.code === countryCode)) {
+            return { countryCode, method: 'gps' };
+          }
+        }
+      } catch {
+        // Reverse geocoding failed or timed out
+      }
+    } catch {
+      // User declined or GPS timeout: continue to IP-based lookup
+    }
+  }
+
+  // Method 2: IP-based lookup via ipwho.is
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 2500);
-    
-    // ipwho.is is a free, CORS-friendly IP geolocation API with no rate limit for light use
     const res = await fetch('https://ipwho.is/?fields=country_code,success', {
       signal: controller.signal,
     });
@@ -396,9 +437,27 @@ export async function detectUserCountry(): Promise<{ countryCode: string; method
     // Ignore and fallback
   }
 
-  // Method 2: Browser navigator.language fallback heuristic (e.g., 'hu-HU' -> HU, 'de-AT' -> AT)
+  // Method 3: Secondary IP lookup via ipapi.co
   try {
-    if (navigator.language) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const res = await fetch('https://ipapi.co/country/', {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      const code = (await res.text()).trim().toUpperCase();
+      if (code && code.length === 2 && COUNTRIES.some((c) => c.code === code)) {
+        return { countryCode: code, method: 'ip' };
+      }
+    }
+  } catch {
+    // Ignore and fallback
+  }
+
+  // Method 4: Browser navigator.language fallback heuristic (e.g., 'hu-HU' -> HU, 'de-AT' -> AT)
+  try {
+    if (typeof navigator !== 'undefined' && navigator.language) {
       const parts = navigator.language.split('-');
       if (parts.length === 2) {
         const langCountry = parts[1].toUpperCase();

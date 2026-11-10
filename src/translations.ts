@@ -43,6 +43,11 @@ export interface Translations {
   averageConsumption: string;
   consumptionUnit: string;
   consumptionPresets: string;
+  selectCar: string;
+  selectCarPlaceholder: string;
+  searchCar: string;
+  noCarFound: string;
+  selectedCarApplied: string;
   
   // Amortization
   amortizationLabel: string;
@@ -126,6 +131,11 @@ export const translations: Record<Language, Translations> = {
     averageConsumption: 'Átlagfogyasztás',
     consumptionUnit: 'liter / 100 km',
     consumptionPresets: 'Gyors beállítások',
+    selectCar: 'Autótípus kiválasztása (opcionális)',
+    selectCarPlaceholder: 'Válassz autót a gyári átlagfogyasztáshoz...',
+    searchCar: 'Keresés márka vagy modell szerint...',
+    noCarFound: 'Nem található autó a megadott keresésre',
+    selectedCarApplied: 'autó kiválasztva',
     
     amortizationLabel: 'Amortizációs díj',
     amortizationDesc: 'Kopási, fenntartási és szervizköltségek fedezésére (alapértelmezetten +15 Ft/km)',
@@ -201,6 +211,11 @@ export const translations: Record<Language, Translations> = {
     averageConsumption: 'Average Consumption',
     consumptionUnit: 'liters / 100 km',
     consumptionPresets: 'Quick presets',
+    selectCar: 'Select vehicle model (optional)',
+    selectCarPlaceholder: 'Choose vehicle for benchmark consumption...',
+    searchCar: 'Search by make or model...',
+    noCarFound: 'No vehicle found matching your search',
+    selectedCarApplied: 'vehicle selected',
     
     amortizationLabel: 'Vehicle Depreciation / Amortization',
     amortizationDesc: 'Covers wear, maintenance, and vehicle depreciation (+15 HUF/km)',

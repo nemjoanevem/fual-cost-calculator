@@ -10,6 +10,9 @@ export interface LocationPoint {
   displayName: string;
   lat: number;
   lon: number;
+  postcode?: string;
+  city?: string;
+  country?: string;
 }
 
 export interface RouteResult {
@@ -29,7 +32,9 @@ const MAX_GOOGLE_CALLS_PER_SESSION = 50;
 let googleCallsThisSession = 0;
 
 /**
- * Autocomplete address search using Photon / Nominatim API
+ * Autocomplete address search using Photon / Nominatim API.
+ * Ensures postcode (irányítószám) and district/locality are clearly included
+ * so identical streets/places can be distinguished accurately.
  */
 export async function searchAddressSuggestions(query: string): Promise<LocationPoint[]> {
   const trimmed = query.trim();
@@ -39,7 +44,7 @@ export async function searchAddressSuggestions(query: string): Promise<LocationP
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3500);
 
-    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(trimmed)}&limit=5`;
+    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(trimmed)}&limit=6`;
     const res = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
 
@@ -50,18 +55,38 @@ export async function searchAddressSuggestions(query: string): Promise<LocationP
           const props = feat.properties || {};
           const coords = feat.geometry?.coordinates || [0, 0];
 
-          const parts = [
-            props.name,
-            props.street ? `${props.street} ${props.housenumber || ''}`.trim() : null,
-            props.city || props.town || props.village,
-            props.state,
-            props.country,
-          ].filter(Boolean);
+          const street = props.street
+            ? `${props.street} ${props.housenumber || ''}`.trim()
+            : (props.type === 'street' || props.type === 'house' ? props.name : null);
+          const name = props.name && props.name !== street ? props.name : null;
+          const district = props.district || props.locality || null;
+          const city = props.city || props.town || props.village || null;
+          const postcode = props.postcode ? String(props.postcode).trim() : null;
+          const country = props.country || null;
+
+          // Assemble location with postcode first or attached to city:
+          // Example: "Fő utca, 1011 Budapest (I. kerület), Magyarország"
+          // Or: "1011 Budapest, Fő utca"
+          const cityWithPostcode = postcode && city
+            ? `${postcode} ${city}`
+            : (city || postcode || null);
+
+          const parts: string[] = [];
+          if (street) parts.push(street);
+          if (name && !street) parts.push(name);
+          if (district && district !== city) parts.push(district);
+          if (cityWithPostcode) parts.push(cityWithPostcode);
+          if (country) parts.push(country);
+
+          const displayName = parts.filter(Boolean).join(', ') || props.name || trimmed;
 
           return {
-            displayName: parts.join(', ') || props.name || trimmed,
+            displayName,
             lon: coords[0],
             lat: coords[1],
+            postcode: postcode || undefined,
+            city: city || undefined,
+            country: country || undefined,
           };
         });
       }
@@ -76,11 +101,12 @@ export async function searchAddressSuggestions(query: string): Promise<LocationP
 
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
       trimmed
-    )}&format=json&limit=5&addressdetails=1`;
+    )}&format=json&limit=6&addressdetails=1`;
     const res = await fetch(url, {
       signal: controller.signal,
       headers: {
         'Accept-Language': 'hu,en;q=0.8',
+        'User-Agent': 'FuelCalculatorApp/1.0 (https://fuelcalc.app)',
       },
     });
     clearTimeout(timeout);
@@ -88,11 +114,39 @@ export async function searchAddressSuggestions(query: string): Promise<LocationP
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
-        return data.map((item: any) => ({
-          displayName: item.display_name,
-          lat: parseFloat(item.lat),
-          lon: parseFloat(item.lon),
-        }));
+        return data.map((item: any) => {
+          const addr = item.address || {};
+          const postcode = addr.postcode ? String(addr.postcode).trim() : null;
+          const road = addr.road || addr.pedestrian || addr.highway || null;
+          const houseNumber = addr.house_number || '';
+          const street = road ? `${road} ${houseNumber}`.trim() : null;
+          const suburb = addr.suburb || addr.borough || addr.neighbourhood || null;
+          const city = addr.city || addr.town || addr.village || addr.municipality || null;
+          const country = addr.country || null;
+
+          let displayName = item.display_name;
+          if (street || city) {
+            const cityWithPostcode = postcode && city ? `${postcode} ${city}` : (city || postcode || null);
+            const parts = [
+              street || item.name,
+              suburb && suburb !== city ? suburb : null,
+              cityWithPostcode,
+              country,
+            ].filter(Boolean);
+            if (parts.length > 1) {
+              displayName = parts.join(', ');
+            }
+          }
+
+          return {
+            displayName,
+            lat: parseFloat(item.lat),
+            lon: parseFloat(item.lon),
+            postcode: postcode || undefined,
+            city: city || undefined,
+            country: country || undefined,
+          };
+        });
       }
     }
   } catch {

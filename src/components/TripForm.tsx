@@ -13,6 +13,8 @@ import {
   AlertCircle,
   Car,
   Fuel,
+  ChevronDown,
+  X,
 } from 'lucide-react';
 import {
   LocationPoint,
@@ -21,6 +23,16 @@ import {
   RouteResult,
 } from '../services/routingApi.ts';
 import { Language, translations } from '../translations.ts';
+import vehiclesData from '../data/vehicles.json';
+
+export interface Vehicle {
+  id: string;
+  make: string;
+  model: string;
+  displayName: string;
+  consumption: number;
+  fuelType?: 'petrol95' | 'diesel' | 'premiumPetrol' | 'premiumDiesel' | 'lpg';
+}
 
 interface TripFormProps {
   lang: Language;
@@ -81,6 +93,12 @@ export const TripForm: React.FC<TripFormProps> = ({
   const fromDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Car selection state
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [isCarDropdownOpen, setIsCarDropdownOpen] = useState(false);
+  const [carSearchQuery, setCarSearchQuery] = useState('');
+  const carWrapperRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (fromWrapperRef.current && !fromWrapperRef.current.contains(event.target as Node)) {
@@ -89,10 +107,24 @@ export const TripForm: React.FC<TripFormProps> = ({
       if (toWrapperRef.current && !toWrapperRef.current.contains(event.target as Node)) {
         setShowToSuggestions((prev) => (prev ? false : prev));
       }
+      if (carWrapperRef.current && !carWrapperRef.current.contains(event.target as Node)) {
+        setIsCarDropdownOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const allVehicles = vehiclesData as Vehicle[];
+  const filteredVehicles = allVehicles.filter((v) => {
+    const q = carSearchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      v.displayName.toLowerCase().includes(q) ||
+      v.make.toLowerCase().includes(q) ||
+      v.model.toLowerCase().includes(q)
+    );
+  }).slice(0, 50); // limit to 50 for smooth render performance
 
   const handleFromInput = (val: string) => {
     onFromAddressChange(val);
@@ -268,10 +300,17 @@ export const TripForm: React.FC<TripFormProps> = ({
                         onFromAddressChange(s.displayName);
                         setShowFromSuggestions(false);
                       }}
-                      className="w-full text-left px-3.5 py-2.5 text-xs text-zinc-200 hover:bg-zinc-800 hover:text-emerald-400 border-b border-zinc-800/60 last:border-0 truncate flex items-center gap-2 transition-colors cursor-pointer"
+                      className="w-full text-left px-3.5 py-2.5 text-xs text-zinc-200 hover:bg-zinc-800 hover:text-emerald-400 border-b border-zinc-800/60 last:border-0 flex items-center justify-between gap-2 transition-colors cursor-pointer"
                     >
-                      <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span className="truncate">{s.displayName}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span className="truncate">{s.displayName}</span>
+                      </div>
+                      {s.postcode && (
+                        <span className="shrink-0 text-[10px] font-mono-num font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-1.5 py-0.5 rounded">
+                          {s.postcode}
+                        </span>
+                      )}
                     </button>
                   ))
                 ) : (
@@ -336,10 +375,17 @@ export const TripForm: React.FC<TripFormProps> = ({
                         onToAddressChange(s.displayName);
                         setShowToSuggestions(false);
                       }}
-                      className="w-full text-left px-3.5 py-2.5 text-xs text-zinc-200 hover:bg-zinc-800 hover:text-emerald-400 border-b border-zinc-800/60 last:border-0 truncate flex items-center gap-2 transition-colors cursor-pointer"
+                      className="w-full text-left px-3.5 py-2.5 text-xs text-zinc-200 hover:bg-zinc-800 hover:text-emerald-400 border-b border-zinc-800/60 last:border-0 flex items-center justify-between gap-2 transition-colors cursor-pointer"
                     >
-                      <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span className="truncate">{s.displayName}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span className="truncate">{s.displayName}</span>
+                      </div>
+                      {s.postcode && (
+                        <span className="shrink-0 text-[10px] font-mono-num font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-1.5 py-0.5 rounded">
+                          {s.postcode}
+                        </span>
+                      )}
                     </button>
                   ))
                 ) : (
@@ -434,6 +480,16 @@ export const TripForm: React.FC<TripFormProps> = ({
                   </span>
                 </div>
               </div>
+              <div className="pt-2 border-t border-zinc-800/60 space-y-1 text-[11px] text-zinc-400">
+                <div className="flex items-start gap-1.5 truncate">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 mt-1" />
+                  <span className="truncate text-zinc-200 font-medium">{fromAddress}</span>
+                </div>
+                <div className="flex items-start gap-1.5 truncate">
+                  <span className="w-2 h-2 rounded-full bg-red-400 shrink-0 mt-1" />
+                  <span className="truncate text-zinc-200 font-medium">{toAddress}</span>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -485,31 +541,153 @@ export const TripForm: React.FC<TripFormProps> = ({
         </label>
       </div>
 
-      {/* Average Consumption Input */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-zinc-400 flex items-center gap-1.5">
-            <Fuel className="w-3.5 h-3.5 text-emerald-400" />
-            <span>{t.averageConsumption}</span>
+      {/* Vehicle Model Selector & Average Consumption Input */}
+      <div className="space-y-3">
+        {/* Searchable Car Selector */}
+        <div ref={carWrapperRef} className="relative">
+          <label className="text-xs font-medium text-zinc-400 flex items-center justify-between mb-1.5">
+            <span className="flex items-center gap-1.5">
+              <Car className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{t.selectCar}</span>
+            </span>
+            {selectedVehicle && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedVehicle(null);
+                  onConsumptionChange(6.5);
+                }}
+                className="text-[11px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <X className="w-3 h-3" />
+                <span>{lang === 'hu' ? 'Törlés' : 'Clear'}</span>
+              </button>
+            )}
           </label>
-          <span className="text-[11px] text-zinc-400 font-mono-num">
-            {t.consumptionUnit}
-          </span>
+
+          <button
+            type="button"
+            onClick={() => setIsCarDropdownOpen((prev) => !prev)}
+            className="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-left flex items-center justify-between transition-all cursor-pointer focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+          >
+            <div className="flex items-center gap-2.5 min-w-0 pr-2">
+              <span className="text-zinc-400 shrink-0">🚗</span>
+              {selectedVehicle ? (
+                <div className="min-w-0 truncate">
+                  <span className="font-medium text-zinc-100 truncate block">
+                    {selectedVehicle.displayName}
+                  </span>
+                  <span className="text-[11px] text-emerald-400 font-mono-num">
+                    {selectedVehicle.consumption} L / 100km &bull; {selectedVehicle.make}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-zinc-500 truncate text-xs sm:text-sm">
+                  {t.selectCarPlaceholder}
+                </span>
+              )}
+            </div>
+            <ChevronDown
+              className={`w-4 h-4 text-zinc-400 shrink-0 transition-transform duration-200 ${
+                isCarDropdownOpen ? 'rotate-180 text-emerald-400' : ''
+              }`}
+            />
+          </button>
+
+          {isCarDropdownOpen && (
+            <div className="absolute z-30 left-0 right-0 mt-1 bg-zinc-900/98 backdrop-blur-md border border-zinc-700/80 rounded-xl shadow-2xl overflow-hidden max-h-64 flex flex-col">
+              {/* Search input in dropdown */}
+              <div className="p-2 border-b border-zinc-800 sticky top-0 bg-zinc-900/95 z-10">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={carSearchQuery}
+                    onChange={(e) => setCarSearchQuery(e.target.value)}
+                    placeholder={t.searchCar}
+                    autoFocus
+                    className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-hidden focus:border-emerald-500"
+                  />
+                  <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2" />
+                </div>
+              </div>
+
+              {/* Vehicle Options list */}
+              <div className="overflow-y-auto divide-y divide-zinc-800/40">
+                {filteredVehicles.length > 0 ? (
+                  filteredVehicles.map((car) => {
+                    const isSelected = selectedVehicle?.id === car.id;
+                    return (
+                      <button
+                        key={car.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedVehicle(car);
+                          onConsumptionChange(car.consumption);
+                          setIsCarDropdownOpen(false);
+                          setCarSearchQuery('');
+                        }}
+                        className={`w-full px-3.5 py-2.5 text-left flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                          isSelected
+                            ? 'bg-emerald-500/10 text-emerald-300'
+                            : 'hover:bg-zinc-800/70 text-zinc-200'
+                        }`}
+                      >
+                        <div className="min-w-0 pr-2">
+                          <span className="font-medium text-zinc-100 block truncate">
+                            {car.displayName}
+                          </span>
+                          <span className="text-[10px] text-zinc-400">
+                            {car.make} &bull; {car.fuelType === 'diesel' ? 'Dízel' : 'Benzin'}
+                          </span>
+                        </div>
+                        <span className="font-mono-num font-semibold text-emerald-400 text-xs shrink-0 px-2 py-0.5 rounded bg-zinc-950 border border-zinc-800">
+                          {car.consumption} L
+                        </span>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="p-4 text-center text-xs text-zinc-500">
+                    {t.noCarFound}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-        <div className="relative">
-          <input
-            type="number"
-            min="0.1"
-            max="40"
-            step="0.1"
-            value={consumptionL100 || ''}
-            onChange={(e) => onConsumptionChange(Math.max(0, parseFloat(e.target.value) || 0))}
-            placeholder="6.5"
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-base sm:text-sm font-mono-num text-zinc-100 focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-          />
-          <span className="absolute right-3.5 top-2.5 text-xs font-mono-num text-zinc-400">
-            L / 100km
-          </span>
+
+        {/* Average Consumption Input Number */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-zinc-400 flex items-center gap-1.5">
+              <Fuel className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{t.averageConsumption}</span>
+            </label>
+            <span className="text-[11px] text-zinc-400 font-mono-num">
+              {t.consumptionUnit}
+            </span>
+          </div>
+          <div className="relative">
+            <input
+              type="number"
+              min="0.1"
+              max="40"
+              step="0.1"
+              value={consumptionL100 || ''}
+              onChange={(e) => {
+                onConsumptionChange(Math.max(0, parseFloat(e.target.value) || 0));
+                // If user manually customizes number, detach selectedVehicle highlight if mismatched
+                if (selectedVehicle && selectedVehicle.consumption !== parseFloat(e.target.value)) {
+                  setSelectedVehicle(null);
+                }
+              }}
+              placeholder="6.5"
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-base sm:text-sm font-mono-num text-zinc-100 focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            />
+            <span className="absolute right-3.5 top-2.5 text-xs font-mono-num text-zinc-400">
+              L / 100km
+            </span>
+          </div>
         </div>
       </div>
 
